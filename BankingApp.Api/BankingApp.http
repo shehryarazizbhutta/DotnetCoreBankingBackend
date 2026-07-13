@@ -1,0 +1,72 @@
+@token = eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJodHRwOi8vc2NoZW1hcy54bWxzb2FwLm9yZy93cy8yMDA1LzA1L2lkZW50aXR5L2NsYWltcy9uYW1laWRlbnRpZmllciI6IjQ1YjdlZjYwLTc1NWUtNDI3My05ZDc1LTc4YjM0MWIwYTlkMyIsImh0dHA6Ly9zY2hlbWFzLnhtbHNvYXAub3JnL3dzLzIwMDUvMDUvaWRlbnRpdHkvY2xhaW1zL2VtYWlsYWRkcmVzcyI6InN1bHRhbjFAZG9tYWluLmNvbSIsImV4cCI6MTc4Mzk2MTE0OSwiaXNzIjoiU2hlaHJ5YXJCYW5raW5nQXBwIiwiYXVkIjoiU2hlaHJ5YXJCYW5raW5nQXBwQ2xpZW50cyJ9.YYfiMXTCCEYJoydtDqYnQ3ciluzQOCwXRM-bDopErb0
+
+
+###
+POST http://localhost:5196/register
+Content-Type: application/json
+
+{
+    "fullName": "Sultan2",
+    "email": "sultan2@domain.com",
+    "password": "Abcd1234!"
+}
+
+###
+POST http://localhost:5196/login
+Content-Type: application/json
+
+{
+    "email": "sultan1@domain.com",
+    "password": "Abcd1234!"
+}
+
+###
+POST http://localhost:5196/accounts
+Content-Type: application/json
+Authorization: Bearer {{token}}
+
+{
+    "accountType": 0
+}
+
+###
+GET http://localhost:5196/accounts
+Authorization: Bearer {{token}}
+
+###
+GET http://localhost:5196/accounts/de1853ba-55aa-4b88-8c0b-3e2769b76b74
+Authorization: Bearer {{token}}
+
+
+###
+POST http://localhost:5196/accounts/de1853ba-55aa-4b88-8c0b-3e2769b76b74/deposit
+Authorization: Bearer {{token}}
+Content-Type: application/json
+
+{
+    "amount": 700
+}
+
+###
+POST http://localhost:5196/accounts/de1853ba-55aa-4b88-8c0b-3e2769b76b74/withdraw
+Authorization: Bearer {{token}}
+Content-Type: application/json
+
+{
+    "amount": 200
+}
+
+###
+POST http://localhost:5196/accounts/transfer
+Content-Type: application/json
+Authorization: Bearer {{token}}
+
+{
+    "fromAccountNumber": "PK-001-0679939762",
+    "toAccountNumber": "PK-001-0858813769",
+    "amount": 100
+}
+
+###
+GET http://localhost:5196/accounts/PK-001-0679939762/transactions?page=1&pageSize=3
+Authorization: Bearer {{token}}
