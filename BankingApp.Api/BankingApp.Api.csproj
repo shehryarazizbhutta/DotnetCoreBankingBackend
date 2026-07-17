@@ -18,4 +18,8 @@
     <PackageReference Include="System.IdentityModel.Tokens.Jwt" Version="8.19.1" />
   </ItemGroup>
 
+  <ItemGroup>
+    <ProjectReference Include="..\BankingApp.Application\BankingApp.Application.csproj" />
+  </ItemGroup>
+
 </Project>

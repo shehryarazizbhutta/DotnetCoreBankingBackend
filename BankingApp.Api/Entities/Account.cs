@@ -1,6 +1,6 @@
 using BankingApp.Api.Enums;
 
-namespace BankingApp.Api.Models;
+namespace BankingApp.Api.Entities;
 
 public class Account
 {

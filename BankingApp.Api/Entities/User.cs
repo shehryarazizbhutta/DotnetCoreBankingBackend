@@ -1,4 +1,4 @@
-namespace BankingApp.Api.Models;
+namespace BankingApp.Api.Entities;
 
 public class User
 {
