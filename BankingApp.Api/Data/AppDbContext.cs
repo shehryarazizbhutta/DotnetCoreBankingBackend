@@ -1,5 +1,5 @@
-using BankingApp.Api.Entities;
 using Microsoft.EntityFrameworkCore;
+using BankingApp.Domain.Entities;
 
 namespace BankingApp.Api.Data;
 

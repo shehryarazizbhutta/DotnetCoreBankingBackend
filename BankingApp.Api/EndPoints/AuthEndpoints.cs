@@ -1,11 +1,13 @@
-using BankingApp.Api.Data;
 using BankingApp.Api.DTOs;
-using BankingApp.Api.Entities;
+using BankingApp.Domain.Entities;
 using BankingApp.Api.Services;
 using BCrypt.Net;
 using Microsoft.EntityFrameworkCore;
-
 namespace BankingApp.Api.Endpoints;
+
+using BankingApp.Api.Data;
+using BankingApp.Domain.Enums;
+
 
 public static class AuthEndpoints
 {
@@ -38,7 +40,7 @@ public static class AuthEndpoints
                 UserId = user.Id,
                 AccountNumber = accountNumberService.Generate(),
                 Balance = 0,
-                AccountType = Enums.AccountType.Current,
+                AccountType = AccountType.Current,
                 IsPrimary = true,
                 CreatedAt = DateTime.UtcNow
             };

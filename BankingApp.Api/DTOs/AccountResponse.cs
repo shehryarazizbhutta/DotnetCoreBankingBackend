@@ -1,4 +1,4 @@
-using BankingApp.Api.Enums;
+using BankingApp.Domain.Enums;
 
 namespace BankingApp.Api.DTOs;
 
