@@ -2,7 +2,7 @@
 
 #nullable disable
 
-namespace BankingApp.Api.Migrations
+namespace BankingApp.Infrastructure.Migrations
 {
     /// <inheritdoc />
     public partial class AddReferenceAccountNumber : Migration

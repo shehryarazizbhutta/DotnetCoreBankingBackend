@@ -1,7 +1,7 @@
 using Microsoft.EntityFrameworkCore;
 using BankingApp.Domain.Entities;
 
-namespace BankingApp.Api.Data;
+namespace BankingApp.Infrastructure.Data;
 
 public class AppDbContext(DbContextOptions<AppDbContext> options) : DbContext(options)
 {

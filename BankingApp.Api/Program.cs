@@ -1,4 +1,3 @@
-using BankingApp.Api.Data;
 using Microsoft.EntityFrameworkCore;
 using BankingApp.Api.Endpoints;
 using BankingApp.Api.Services;
@@ -6,6 +5,7 @@ using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.IdentityModel.Tokens;
 using System.Text.Json.Serialization;
 using System.Text;
+using BankingApp.Infrastructure.Data;
 
 var builder = WebApplication.CreateBuilder(args);
 builder.Services.AddValidation();

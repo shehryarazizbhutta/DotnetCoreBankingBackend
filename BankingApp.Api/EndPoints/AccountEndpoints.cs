@@ -4,7 +4,7 @@ using BankingApp.Domain.Entities;
 using BankingApp.Api.Services;
 using Microsoft.EntityFrameworkCore;
 using System.Security.Claims;
-using BankingApp.Api.Data;
+using BankingApp.Infrastructure.Data;
 namespace BankingApp.Api.Endpoints;
 
 public static class AccountEndpoints

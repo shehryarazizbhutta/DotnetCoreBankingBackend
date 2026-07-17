@@ -5,7 +5,7 @@ using BCrypt.Net;
 using Microsoft.EntityFrameworkCore;
 namespace BankingApp.Api.Endpoints;
 
-using BankingApp.Api.Data;
+using BankingApp.Infrastructure.Data;
 using BankingApp.Domain.Enums;
 
 
