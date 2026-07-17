@@ -1,4 +1,4 @@
-using BankingApp.Api.Models;
+using BankingApp.Api.Entities;
 using Microsoft.EntityFrameworkCore;
 
 namespace BankingApp.Api.Data;

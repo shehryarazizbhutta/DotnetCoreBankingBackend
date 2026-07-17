@@ -1,7 +1,7 @@
 using BankingApp.Api.Data;
 using BankingApp.Api.DTOs;
 using BankingApp.Api.Enums;
-using BankingApp.Api.Models;
+using BankingApp.Api.Entities;
 using BankingApp.Api.Services;
 using Microsoft.EntityFrameworkCore;
 using System.Security.Claims;
