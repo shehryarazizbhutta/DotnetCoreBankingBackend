@@ -1,4 +1,4 @@
-@token = eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJodHRwOi8vc2NoZW1hcy54bWxzb2FwLm9yZy93cy8yMDA1LzA1L2lkZW50aXR5L2NsYWltcy9uYW1laWRlbnRpZmllciI6IjFmNDliMmM2LWMzMDYtNDBhOS05ZWU0LTk4YmIyZTBjYjk2NyIsImh0dHA6Ly9zY2hlbWFzLnhtbHNvYXAub3JnL3dzLzIwMDUvMDUvaWRlbnRpdHkvY2xhaW1zL2VtYWlsYWRkcmVzcyI6InN1bHRhbjNAZG9tYWluLmNvbSIsImV4cCI6MTc4NDMwMjg5OSwiaXNzIjoiU2hlaHJ5YXJCYW5raW5nQXBwIiwiYXVkIjoiU2hlaHJ5YXJCYW5raW5nQXBwQ2xpZW50cyJ9.b1nm106hbZ5z8nujPlw7SLF4DpIMN0lDXekTt_EsM7I
+@token = eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJodHRwOi8vc2NoZW1hcy54bWxzb2FwLm9yZy93cy8yMDA1LzA1L2lkZW50aXR5L2NsYWltcy9uYW1laWRlbnRpZmllciI6ImZmYjViYTg4LTQ3OWUtNDNkMi05MTk1LWRmMDNhNzM1ZmI0NyIsImh0dHA6Ly9zY2hlbWFzLnhtbHNvYXAub3JnL3dzLzIwMDUvMDUvaWRlbnRpdHkvY2xhaW1zL2VtYWlsYWRkcmVzcyI6InN1bHRhbjRAZG9tYWluLmNvbSIsImV4cCI6MTc4NDMwODI0MiwiaXNzIjoiU2hlaHJ5YXJCYW5raW5nQXBwIiwiYXVkIjoiU2hlaHJ5YXJCYW5raW5nQXBwQ2xpZW50cyJ9.lXHpjD2igkJOcQYBjv7KtAu9P3JOnwJJH5FD0zepSEM
 
 
 ###
@@ -6,8 +6,8 @@ POST http://localhost:5196/register
 Content-Type: application/json
 
 {
-    "fullName": "Sultan3",
-    "email": "sultan3@domain.com",
+    "fullName": "Sultan4",
+    "email": "sultan4@domain.com",
     "password": "Abcd1234!"
 }
 
@@ -16,7 +16,7 @@ POST http://localhost:5196/login
 Content-Type: application/json
 
 {
-    "email": "sultan3@domain.com",
+    "email": "sultan4@domain.com",
     "password": "Abcd1234!"
 }
 
@@ -34,21 +34,21 @@ GET http://localhost:5196/accounts
 Authorization: Bearer {{token}}
 
 ###
-GET http://localhost:5196/accounts/eda7d219-07dd-4b83-b46e-3fa7362f191b
+GET http://localhost:5196/accounts/c50aa9a4-ac41-4443-8032-9628ce32e43a
 Authorization: Bearer {{token}}
 
 
 ###
-POST http://localhost:5196/accounts/eda7d219-07dd-4b83-b46e-3fa7362f191b/deposit
+POST http://localhost:5196/accounts/c50aa9a4-ac41-4443-8032-9628ce32e43a/deposit
 Authorization: Bearer {{token}}
 Content-Type: application/json
 
 {
-    "amount": 700
+    "amount": 7000
 }
 
 ###
-POST http://localhost:5196/accounts/eda7d219-07dd-4b83-b46e-3fa7362f191b/withdraw
+POST http://localhost:5196/accounts/c50aa9a4-ac41-4443-8032-9628ce32e43a/withdraw
 Authorization: Bearer {{token}}
 Content-Type: application/json
 
@@ -62,11 +62,11 @@ Content-Type: application/json
 Authorization: Bearer {{token}}
 
 {
-    "fromAccountNumber": "PK-001-0773748133",
+    "fromAccountNumber": "PK-001-0205475979",
     "toAccountNumber": "PK-001-0313143523",
     "amount": 1200
 }
 
 ###
-GET http://localhost:5196/accounts/PK-001-0773748133/transactions?page=1&pageSize=5
+GET http://localhost:5196/accounts/PK-001-0205475979/transactions?page=1&pageSize=5
 Authorization: Bearer {{token}}
