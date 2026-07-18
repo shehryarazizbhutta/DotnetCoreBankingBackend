@@ -6,6 +6,8 @@ using Microsoft.IdentityModel.Tokens;
 using System.Text.Json.Serialization;
 using System.Text;
 using BankingApp.Infrastructure.Data;
+using BankingApp.Application.Interfaces;
+using BankingApp.Infrastructure.Repositories;
 
 var builder = WebApplication.CreateBuilder(args);
 builder.Services.AddValidation();
@@ -19,6 +21,10 @@ builder.Services.AddScoped<JwtService>();
 
 builder.Services.AddDbContext<AppDbContext>(options =>
     options.UseNpgsql(builder.Configuration.GetConnectionString("BankingAppDb")));
+    
+builder.Services.AddScoped<IUserRepository, UserRepository>();
+builder.Services.AddScoped<IAccountRepository, AccountRepository>();
+builder.Services.AddScoped<ITransactionRepository, TransactionRepository>();
 
 builder.Services
     .AddAuthentication(JwtBearerDefaults.AuthenticationScheme)

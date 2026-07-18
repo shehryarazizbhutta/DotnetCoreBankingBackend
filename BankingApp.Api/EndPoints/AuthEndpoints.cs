@@ -7,17 +7,17 @@ namespace BankingApp.Api.Endpoints;
 
 using BankingApp.Infrastructure.Data;
 using BankingApp.Domain.Enums;
-
+using BankingApp.Application.Interfaces;
 
 public static class AuthEndpoints
 {
     public static void MapAuthEndpoints(this WebApplication app)
     {
-        app.MapPost("/register", async (AppDbContext db, RegisterRequest request, AccountNumberService accountNumberService) =>
+        app.MapPost("/register", async (IUserRepository userRepository, IAccountRepository accountRepository, RegisterRequest request, AccountNumberService accountNumberService) =>
         {
-            var exists = await db.Users.AnyAsync(user => user.Email == request.Email);
+            var exists = await userRepository.GetByEmailAsync(request.Email);
 
-            if (exists)
+            if (exists != null)
                 return Results.BadRequest("Email already registered");
 
             var passwordHash = BCrypt.Net.BCrypt.HashPassword(request.Password);
@@ -31,8 +31,7 @@ public static class AuthEndpoints
                 CreatedAt = DateTime.UtcNow
             };
 
-            db.Users.Add(user);
-            await db.SaveChangesAsync();
+            await userRepository.AddAsync(user);
 
             var account = new Account
             {
@@ -45,8 +44,7 @@ public static class AuthEndpoints
                 CreatedAt = DateTime.UtcNow
             };
 
-            db.Accounts.Add(account);
-            await db.SaveChangesAsync();
+            await accountRepository.AddAsync(account);
 
             return Results.Ok(new
             {
@@ -56,17 +54,17 @@ public static class AuthEndpoints
             });
         });
 
-        app.MapPost("/login", async (AppDbContext db, LoginRequest request, JwtService jwt) =>
+        app.MapPost("/login", async (IUserRepository userRepository, LoginRequest request, JwtService jwt) =>
         {
-            var user = await db.Users.FirstOrDefaultAsync(u => u.Email == request.Email);
+            var user = await userRepository.GetByEmailAsync(request.Email);
 
             if (user == null)
-                return Results.BadRequest("Invalid credentials");
+                return Results.BadRequest("Invalid Email");
 
             var isValid = BCrypt.Net.BCrypt.Verify(request.Password, user.PasswordHash);
 
             if (!isValid)
-                return Results.BadRequest("Invalid credentials");
+                return Results.BadRequest("Invalid Password");
 
             var token = jwt.GenerateToken(user);
 

@@ -5,13 +5,14 @@ using BankingApp.Api.Services;
 using Microsoft.EntityFrameworkCore;
 using System.Security.Claims;
 using BankingApp.Infrastructure.Data;
+using BankingApp.Application.Interfaces;
 namespace BankingApp.Api.Endpoints;
 
 public static class AccountEndpoints
 {
     public static void MapAccountEndpoints(this WebApplication app)
     {
-        app.MapGet("/accounts", async (AppDbContext db, HttpContext context) =>
+        app.MapGet("/accounts", async (IAccountRepository accountRepository, HttpContext context) =>
         {
             var userIdClaim = context.User.FindFirst(ClaimTypes.NameIdentifier);
 
@@ -22,9 +23,7 @@ public static class AccountEndpoints
 
             var userId = Guid.Parse(userIdClaim.Value);
 
-            var accounts = await db.Accounts
-                .Where(a => a.UserId == userId)
-                .ToListAsync();
+            var accounts = await accountRepository.GetAccountsByUserIdAsync(userId);
 
             var response = accounts.Select(account => new AccountResponse(
                 account.Id,
@@ -40,7 +39,7 @@ public static class AccountEndpoints
 
         app.MapPost("/accounts", async (
             CreateAccountRequest request,
-            AppDbContext db,
+            IAccountRepository accountRepository,
             HttpContext context,
             AccountNumberService accountNumberService) =>
         {
@@ -67,10 +66,7 @@ public static class AccountEndpoints
             };
 
 
-            db.Accounts.Add(account);
-
-            await db.SaveChangesAsync();
-
+            await accountRepository.AddAsync(account);
 
             return Results.Ok(new
             {
@@ -85,7 +81,7 @@ public static class AccountEndpoints
 
         app.MapGet("/accounts/{id}", async (
             Guid id,
-            AppDbContext db,
+            IAccountRepository accountRepository,
             HttpContext context) =>
         {
             var userIdClaim = context.User.FindFirst(
@@ -100,11 +96,7 @@ public static class AccountEndpoints
             var userId = Guid.Parse(userIdClaim.Value);
 
 
-            var account = await db.Accounts
-                .FirstOrDefaultAsync(a =>
-                    a.Id == id &&
-                    a.UserId == userId
-                );
+            var account = await accountRepository.GetAccountByIdAsync(id, userId);
 
 
             if (account is null)
@@ -131,7 +123,8 @@ public static class AccountEndpoints
         app.MapPost("/accounts/{id}/deposit", async (
             Guid id,
             AmountRequest request,
-            AppDbContext db,
+            ITransactionRepository transactionRepository,
+            IAccountRepository accountRepository,
             HttpContext context) =>
         {
             var userIdClaim = context.User.FindFirst(
@@ -145,22 +138,14 @@ public static class AccountEndpoints
 
             var userId = Guid.Parse(userIdClaim.Value);
 
-
-            var account = await db.Accounts
-                .FirstOrDefaultAsync(a =>
-                    a.Id == id &&
-                    a.UserId == userId
-                );
-
+            var account = await accountRepository.GetAccountByIdAsync(id, userId);
 
             if (account is null)
             {
                 return Results.NotFound();
             }
 
-
             account.Balance += request.Amount;
-
 
             var transaction = new Transaction
             {
@@ -170,10 +155,7 @@ public static class AccountEndpoints
                 Type = TransactionType.Deposit
             };
 
-
-            db.Transactions.Add(transaction);
-
-            await db.SaveChangesAsync();
+            await transactionRepository.DepositAsync(transaction);
 
             var response = new TransactionResponse(
                 transaction.Id,
@@ -191,7 +173,8 @@ public static class AccountEndpoints
         app.MapPost("/accounts/{id}/withdraw", async (
             Guid id,
             AmountRequest request,
-            AppDbContext db,
+            ITransactionRepository transactionRepository,
+            IAccountRepository accountRepository,
             HttpContext context) =>
         {
             var userIdClaim = context.User.FindFirst(
@@ -206,11 +189,7 @@ public static class AccountEndpoints
             var userId = Guid.Parse(userIdClaim.Value);
 
 
-            var account = await db.Accounts
-                .FirstOrDefaultAsync(a =>
-                    a.Id == id &&
-                    a.UserId == userId
-                );
+            var account = await accountRepository.GetAccountByIdAsync(id, userId);
 
 
             if (account is null)
@@ -235,10 +214,7 @@ public static class AccountEndpoints
                 Type = TransactionType.Withdrawal
             };
 
-
-            db.Transactions.Add(transaction);
-
-            await db.SaveChangesAsync();
+            await transactionRepository.WithdrawAsync(transaction);
 
             var response = new TransactionResponse(
                 transaction.Id,
@@ -256,7 +232,8 @@ public static class AccountEndpoints
 
         app.MapPost("/accounts/transfer", async (
             TransferRequest request,
-            AppDbContext db,
+            ITransactionRepository transactionRepository,
+            IAccountRepository accountRepository,
             HttpContext context) =>
         {
             var userIdClaim = context.User.FindFirst(
@@ -270,30 +247,26 @@ public static class AccountEndpoints
 
             var userId = Guid.Parse(userIdClaim.Value);
 
+            if (request.Amount <= 0)
+            {
+                return Results.BadRequest(
+                    "Amount must be greater than zero.");
+            }
 
             if (request.FromAccountNumber == request.ToAccountNumber)
             {
                 return Results.BadRequest("Cannot transfer to the same account.");
             }
 
-
-            var senderAccount = await db.Accounts
-                .FirstOrDefaultAsync(a =>
-                    a.AccountNumber == request.FromAccountNumber &&
-                    a.UserId == userId
-                );
-
+            var senderAccount = await accountRepository.GetAccountFromUserIdAndAccountNumberAsync(userId, request.FromAccountNumber);
 
             if (senderAccount is null)
             {
                 return Results.NotFound("Sender account not found.");
             }
 
+            var receiverAccount = await accountRepository.GetReceiverAccountAsync(request.ToAccountNumber);
 
-            var receiverAccount = await db.Accounts
-                .FirstOrDefaultAsync(a =>
-                    a.AccountNumber == request.ToAccountNumber
-                );
             if (receiverAccount is null)
             {
                 return Results.NotFound("Receiver account not found.");
@@ -302,47 +275,35 @@ public static class AccountEndpoints
             {
                 return Results.BadRequest("Insufficient balance.");
             }
-            await using var transaction =
-                await db.Database.BeginTransactionAsync();
-            try
+
+            senderAccount.Balance -= request.Amount;
+            receiverAccount.Balance += request.Amount;
+
+            var senderTransaction = new Transaction
             {
-                senderAccount.Balance -= request.Amount;
-
-                receiverAccount.Balance += request.Amount;
-
-
-                var senderTransaction = new Transaction
-                {
-                    Id = Guid.NewGuid(),
-                    AccountId = senderAccount.Id,
-                    Amount = request.Amount,
-                    Type = TransactionType.Transfer,
-                    ReferenceAccountNumber = receiverAccount.AccountNumber
-                };
+                Id = Guid.NewGuid(),
+                AccountId = senderAccount.Id,
+                Amount = request.Amount,
+                Type = TransactionType.Transfer,
+                ReferenceAccountNumber = receiverAccount.AccountNumber,
+                CreatedAt = DateTime.UtcNow
+            };
 
 
-                var receiverTransaction = new Transaction
-                {
-                    Id = Guid.NewGuid(),
-                    AccountId = receiverAccount.Id,
-                    Amount = request.Amount,
-                    Type = TransactionType.Transfer,
-                    ReferenceAccountNumber = senderAccount.AccountNumber
-                };
-                db.Transactions.Add(senderTransaction);
-                db.Transactions.Add(receiverTransaction);
-                await db.SaveChangesAsync();
-                await transaction.CommitAsync();
-                return Results.Ok(new
-                {
-                    message = "Transfer successful"
-                });
-            }
-            catch(Exception ex)
+            var receiverTransaction = new Transaction
             {
-                await transaction.RollbackAsync();
-                return Results.BadRequest(ex.Message);
-            }
+                Id = Guid.NewGuid(),
+                AccountId = receiverAccount.Id,
+                Amount = request.Amount,
+                Type = TransactionType.Transfer,
+                ReferenceAccountNumber = senderAccount.AccountNumber,
+                CreatedAt = DateTime.UtcNow
+            };
+            await transactionRepository.TransferAsync(senderAccount, receiverAccount, senderTransaction, receiverTransaction);
+            return Results.Ok(new
+            {
+                message = "Transfer successful"
+            });
 
         })
         .RequireAuthorization();
@@ -352,7 +313,8 @@ public static class AccountEndpoints
             string accountNumber,
             int page,
             int pageSize,
-            AppDbContext db,
+            ITransactionRepository transactionRepository,
+            IAccountRepository accountRepository,
             HttpContext context) =>
         {
             var userIdClaim = context.User.FindFirst(
@@ -366,13 +328,7 @@ public static class AccountEndpoints
 
             var userId = Guid.Parse(userIdClaim.Value);
 
-
-            var account = await db.Accounts
-                .FirstOrDefaultAsync(a =>
-                    a.AccountNumber == accountNumber &&
-                    a.UserId == userId
-                );
-
+            var account = await accountRepository.GetAccountFromUserIdAndAccountNumberAsync(userId, accountNumber);
 
             if (account is null)
             {
@@ -390,24 +346,9 @@ public static class AccountEndpoints
                 pageSize = 10;
             }
 
+            var totalTransactions = await transactionRepository.GetTotalTransactionsByAccountIdAsync(account.Id);
 
-            var totalTransactions = await db.Transactions
-                .CountAsync(t => t.AccountId == account.Id);
-
-
-            var transactions = await db.Transactions
-                .Where(t => t.AccountId == account.Id)
-                .OrderByDescending(t => t.CreatedAt)
-                .Skip((page - 1) * pageSize)
-                .Take(pageSize)
-                .Select(t => new TransactionResponse(
-                    t.Id,
-                    t.Amount,
-                    t.Type,
-                    t.ReferenceAccountNumber,
-                    t.CreatedAt
-                ))
-                .ToListAsync();
+            var transactions =  await transactionRepository.GetTransactionsByAccountNumberAsync(account.Id, page, pageSize);
 
 
             var response = new AccountStatementResponse(
