@@ -10,6 +10,7 @@ using BankingApp.Application.Interfaces;
 using BankingApp.Infrastructure.Repositories;
 using Microsoft.OpenApi;
 using BankingApp.Application.Services;
+using BankingApp.Api.Middleware;
 
 var builder = WebApplication.CreateBuilder(args);
 builder.Services.AddValidation();
@@ -79,6 +80,9 @@ builder.Services.AddSwaggerGen(options =>
 });
 
 var app = builder.Build();
+
+app.UseMiddleware<ExceptionHandlingMiddleware>();
+app.UseMiddleware<RequestLoggingMiddleware>();
 
 app.UseSwagger();
 app.UseSwaggerUI();

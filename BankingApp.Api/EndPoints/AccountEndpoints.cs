@@ -242,26 +242,15 @@ public static class AccountEndpoints
             {
                 return Results.Unauthorized();
             }
-
             var userId = Guid.Parse(userIdClaim.Value);
-
-            try
+            await transferService.TransferAsync(
+                userId,
+                request
+            );
+            return Results.Ok(new
             {
-                await transferService.TransferAsync(
-                    userId,
-                    request
-                );
-
-                return Results.Ok(new
-                {
-                    message = "Transfer successful"
-                });
-            }
-            catch (Exception ex)
-            {
-                return Results.BadRequest(ex.Message);
-            }
-
+                message = "Transfer successful"
+            });
         })
         .RequireAuthorization();
 
