@@ -230,15 +230,13 @@ public static class AccountEndpoints
         .RequireAuthorization();
 
 
-        app.MapPost("/accounts/transfer", async (
+        app.MapPost("/accounts/transfer",
+        async (
             TransferRequest request,
-            ITransactionRepository transactionRepository,
-            IAccountRepository accountRepository,
+            ITransferService transferService,
             HttpContext context) =>
         {
-            var userIdClaim = context.User.FindFirst(
-                ClaimTypes.NameIdentifier
-            );
+            var userIdClaim = context.User.FindFirst(ClaimTypes.NameIdentifier);
 
             if (userIdClaim is null)
             {
@@ -247,63 +245,22 @@ public static class AccountEndpoints
 
             var userId = Guid.Parse(userIdClaim.Value);
 
-            if (request.Amount <= 0)
+            try
             {
-                return Results.BadRequest(
-                    "Amount must be greater than zero.");
+                await transferService.TransferAsync(
+                    userId,
+                    request
+                );
+
+                return Results.Ok(new
+                {
+                    message = "Transfer successful"
+                });
             }
-
-            if (request.FromAccountNumber == request.ToAccountNumber)
+            catch (Exception ex)
             {
-                return Results.BadRequest("Cannot transfer to the same account.");
+                return Results.BadRequest(ex.Message);
             }
-
-            var senderAccount = await accountRepository.GetAccountFromUserIdAndAccountNumberAsync(userId, request.FromAccountNumber);
-
-            if (senderAccount is null)
-            {
-                return Results.NotFound("Sender account not found.");
-            }
-
-            var receiverAccount = await accountRepository.GetReceiverAccountAsync(request.ToAccountNumber);
-
-            if (receiverAccount is null)
-            {
-                return Results.NotFound("Receiver account not found.");
-            }
-            if (senderAccount.Balance < request.Amount)
-            {
-                return Results.BadRequest("Insufficient balance.");
-            }
-
-            senderAccount.Balance -= request.Amount;
-            receiverAccount.Balance += request.Amount;
-
-            var senderTransaction = new Transaction
-            {
-                Id = Guid.NewGuid(),
-                AccountId = senderAccount.Id,
-                Amount = request.Amount,
-                Type = TransactionType.Transfer,
-                ReferenceAccountNumber = receiverAccount.AccountNumber,
-                CreatedAt = DateTime.UtcNow
-            };
-
-
-            var receiverTransaction = new Transaction
-            {
-                Id = Guid.NewGuid(),
-                AccountId = receiverAccount.Id,
-                Amount = request.Amount,
-                Type = TransactionType.Transfer,
-                ReferenceAccountNumber = senderAccount.AccountNumber,
-                CreatedAt = DateTime.UtcNow
-            };
-            await transactionRepository.TransferAsync(senderAccount, receiverAccount, senderTransaction, receiverTransaction);
-            return Results.Ok(new
-            {
-                message = "Transfer successful"
-            });
 
         })
         .RequireAuthorization();
@@ -348,8 +305,7 @@ public static class AccountEndpoints
 
             var totalTransactions = await transactionRepository.GetTotalTransactionsByAccountIdAsync(account.Id);
 
-            var transactions =  await transactionRepository.GetTransactionsByAccountNumberAsync(account.Id, page, pageSize);
-
+            var transactions = await transactionRepository.GetTransactionsByAccountNumberAsync(account.Id, page, pageSize);
 
             var response = new AccountStatementResponse(
                 account.AccountNumber,
@@ -366,6 +322,6 @@ public static class AccountEndpoints
         })
         .RequireAuthorization();
 
-    
+
     }
 }

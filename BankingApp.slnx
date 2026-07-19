@@ -3,4 +3,5 @@
   <Project Path="BankingApp.Application/BankingApp.Application.csproj" />
   <Project Path="BankingApp.Domain/BankingApp.Domain.csproj" />
   <Project Path="BankingApp.Infrastructure/BankingApp.Infrastructure.csproj" />
+  <Project Path="BankingApp.Tests/BankingApp.Tests.csproj" />
 </Solution>
