@@ -8,6 +8,7 @@ using System.Text;
 using BankingApp.Infrastructure.Data;
 using BankingApp.Application.Interfaces;
 using BankingApp.Infrastructure.Repositories;
+using Microsoft.OpenApi;
 
 var builder = WebApplication.CreateBuilder(args);
 builder.Services.AddValidation();
@@ -45,9 +46,42 @@ builder.Services
         };
     });
 builder.Services.AddAuthorization();
+
+builder.Services.AddEndpointsApiExplorer();
+builder.Services.AddSwaggerGen(options =>
+{
+    options.AddSecurityDefinition("Bearer",
+        new OpenApiSecurityScheme
+        {
+            Name = "Authorization",
+            Type = SecuritySchemeType.Http,
+            Scheme = "Bearer",
+            BearerFormat = "JWT",
+            In = ParameterLocation.Header,
+            Description = "Enter JWT token"
+        });
+
+
+    options.AddSecurityRequirement(document =>
+    {
+        return new OpenApiSecurityRequirement
+        {
+            {
+                new OpenApiSecuritySchemeReference(
+                    "Bearer",
+                    document),
+                new List<string>()
+            }
+        };
+    });
+});
+
 builder.Services.AddSingleton<AccountNumberService>();
 
 var app = builder.Build();
+
+app.UseSwagger();
+app.UseSwaggerUI();
 
 app.UseAuthentication();
 app.UseAuthorization();
