@@ -1,0 +1,36 @@
+services:
+
+  postgres:
+    image: postgres:17
+    container_name: banking-postgres
+    environment:
+      POSTGRES_DB: bankdatabase
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: postgres
+    ports:
+      - "5432:5432"
+    volumes:
+      - banking-data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres -d bankdatabase"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+
+  api:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: banking-api
+    ports:
+      - "8080:8080"
+    depends_on:
+      postgres:
+        condition: service_healthy
+    environment:
+      ConnectionStrings__BankingAppDb: "Host=postgres;Port=5432;Database=bankdatabase;Username=postgres;Password=postgres"
+
+
+volumes:
+  banking-data:
