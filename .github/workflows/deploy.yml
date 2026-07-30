@@ -1,9 +1,12 @@
-name: Build Banking API
+name: Build and Push Banking API
 
 on:
   push:
     branches:
       - main
+
+env:
+  IMAGE_NAME: bankingbackend-api
 
 jobs:
   build:
@@ -15,4 +18,16 @@ jobs:
 
       - name: Build Docker image
         run: |
-          docker build -t bankingbackend-api .
+          docker build -t $IMAGE_NAME .
+
+      - name: Login to Azure Container Registry
+        uses: docker/login-action@v3
+        with:
+          registry: ${{ secrets.ACR_LOGIN_SERVER }}
+          username: ${{ secrets.ACR_USERNAME }}
+          password: ${{ secrets.ACR_PASSWORD }}
+
+      - name: Push Docker image to ACR
+        run: |
+          docker tag $IMAGE_NAME ${{ secrets.ACR_LOGIN_SERVER }}/$IMAGE_NAME:latest
+          docker push ${{ secrets.ACR_LOGIN_SERVER }}/$IMAGE_NAME:latest
